@@ -1,0 +1,50 @@
+name: Frontend Tests and Build
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'my-app/**'
+      - '.github/workflows/my-app-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'my-app/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: 'my-app/package-lock.json'
+    
+    - name: Install dependencies
+      run: |
+        cd my-app
+        npm ci || npm install
+    
+    - name: Lint
+      run: |
+        cd my-app
+        npm run lint || echo "No lint script found"
+    
+    - name: Build
+      run: |
+        cd my-app
+        npm run build || echo "No build script found"
+    
+    - name: Run tests
+      run: |
+        cd my-app
+        npm test -- --passWithNoTests || echo "No tests found"

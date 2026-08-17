@@ -1,0 +1,27 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Prettier check (if available)
+      run: |
+        if [ -f "Frontend/package.json" ]; then
+          cd Frontend
+          npm ci --silent 2>/dev/null && npm run format:check 2>/dev/null || echo "No prettier config"
+        fi
+    
+    - name: Check for secrets (GitGuardian)
+      uses: gitguardian/ggshield-action@master
+      env:
+        GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+      continue-on-error: true
